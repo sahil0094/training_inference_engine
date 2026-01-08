@@ -1,0 +1,172 @@
+This 8-month roadmap synchronizes your project goals with the technical architecture required for a high-performance SLM platform. As requested, the training pipeline efficiency (Unsloth) has been pulled forward into Month 2 to ensure your foundation is optimized from the start, and the inference engine deployment is strictly sequenced before speculative decoding.
+
+---
+
+### **Month 1 (Jan): Project Scoping & Data Preparation**
+
+* **Target Project Selection:** Finalize the lead project (e.g., SIPS) for SLM implementation.
+* 
+**Requirement Gathering:** Define end-to-end latency, reasoning density, and throughput targets for the project.
+
+
+* 
+**Dataset Engineering:** Create high-quality datasets for training and evaluation that mirror the target project’s real-world data distribution.
+
+
+* 
+**Infrastructure Audit:** Ensure development environment GPUs (H100 or A100/A10) are ready for baseline testing.
+
+
+
+---
+
+### **Month 2 (Feb): SLM Selection, Integrated Pipelines & Memory Dynamics**
+
+* 
+**Model Benchmarking:** Select models under 5B parameters based on context length and licensing.
+
+
+* 
+**Tier 1 (Efficiency):** Qwen-2.5-1.5B (Apache 2.0, 128k context).
+
+
+* 
+**Tier 2 (Reasoning):** Llama 3.2 3B (Community License) or Phi-3.5 Mini (MIT License).
+
+
+* 
+**Compliance:** Strictly avoid Qwen-2.5-3B for commercial use due to research-only licensing.
+
+
+
+
+* 
+**Optimized Training Pipeline:** Implement the initial SFT (Supervised Fine-Tuning) pipeline using **Unsloth** to achieve 2x–5x speedups and 60% VRAM reduction immediately.
+
+
+
+#### **Memory Dynamics Calculation**
+
+Calculating memory requirements is critical to prevent Out-of-Memory (OOM) errors during early experimentation.
+
+**1. Inference Memory Formula**
+
+
+* **Weights:** For a 3B model in BF16 (2 bytes), you need **6GB**. In FP8 (1 byte), you need **3GB**.
+
+
+* **KV Cache:** For models with a 128k context window, KV cache can easily exceed weight size. A 128k context window at FP16 for a standard 3B model requires approximately **4GB–8GB** per concurrent user.
+
+
+
+**2. Training Memory Dynamics**
+
+* **Standard Training:** Full fine-tuning usually requires ~16GB–20GB of VRAM per 1 billion parameters.
+* 
+**Unsloth Efficiency:** By rewriting PyTorch layers into fused Triton kernels, Unsloth allows a 3B model to be fine-tuned on <10GB of VRAM, making it possible to use commodity GPUs.
+
+
+
+---
+
+### **Month 3 (Mar): Core Inference Engine Deployment**
+
+* 
+**Inference Kernel Selection:** Test and deploy **vLLM V1** containers for general-purpose high throughput.
+
+
+* 
+**Latency Management:** Enable **Chunked Prefill** as a mandatory primitive to ensure long-context (128k) requests do not block system latency.
+
+
+* 
+**Structured Generation Engine:** Evaluate **SGLang** for workflows requiring complex JSON generation or shared prefix caching (RadixAttention).
+
+
+
+---
+
+### **Month 4 (Apr): Throughput Optimization (The "Turbo" Phase)**
+
+* 
+**Speculative Decoding Implementation:** Deploy **Eagle-3** on top of the established inference engine.
+
+
+* 
+**Speed Benchmarking:** Target 2x–3x speedups in tokens/second by training custom Eagle-3 draft models on SIPS domain data.
+
+
+* 
+**Hardware-Aware Quantization:** * Implement **FP8 (W8A8)** on H100s for a 1.6x throughput boost.
+
+
+* Implement **AWQ** on A100/A10 clusters for optimized INT4/INT8 performance.
+
+
+
+
+
+---
+
+### **Month 5 (May): Orchestration & LoRA Management**
+
+* 
+**Control Plane Deployment:** Adopt **AIBrix** to manage the scaling of vLLM on Kubernetes.
+
+
+* 
+**High-Density LoRA:** Configure AIBrix to serve hundreds of fine-tuned adapters dynamically by routing requests to cached pods.
+
+
+* 
+**Global KV Cache:** Implement a distributed KV cache pool to minimize the cost of recomputing the 128k context for repetitive queries.
+
+
+
+---
+
+### **Month 6 (Jun): Deep Training Kernel Optimization**
+
+* 
+**Memory Fragmentation Reduction:** Integrate **Liger Kernels** to replace standard Hugging Face Transformer layers (RMSNorm, CrossEntropy).
+
+
+* 
+**Performance Scaling:** Use these kernels to increase training batch sizes while maintaining compatibility with FlashAttention.
+
+
+
+---
+
+### **Month 7 (Jul): Targeted Tuning with Spectrum**
+
+* 
+**Selective Layer Training:** Implement **Arcee AI’s Spectrum** to identify high Signal-to-Noise Ratio (SNR) layers.
+
+
+* 
+**Knowledge Preservation:** Freeze "quiet" layers to preserve the base model's world knowledge while tuning only the high-signal layers for the SIPS project.
+
+
+* 
+**Efficiency Gain:** Achieve full fine-tuning performance while reducing training VRAM usage by an additional 50%.
+
+
+
+---
+
+### **Month 8 (Aug): Agentic Scaling & Final Rollout**
+
+* 
+**Prefix Caching Optimization:** Utilize **RadixAttention** in SGLang to achieve up to 5x higher throughput for multi-turn agentic workflows.
+
+
+* **Production Validation:** Perform a final audit comparing the fine-tuned SLM's accuracy and throughput against the project's original legacy models.
+* 
+**Platform Handover:** Finalize documentation for the sovereign, high-throughput inference and training pipeline.
+
+
+
+---
+
+Would you like me to draft a **Hardware Specification List** specifically for the Month 2 benchmarking phase based on these memory dynamics?
